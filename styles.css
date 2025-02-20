@@ -1,0 +1,371 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f4f6f8;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.section {
+    display: none;
+}
+
+.section.active {
+    display: block;
+}
+
+/* Login Section */
+#login-section {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.login-form {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-form input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px; /* Better for mobile */
+}
+
+/* Navigation */
+nav {
+    background: #2c3e50;
+    color: white;
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+nav .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* Buttons */
+button {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-size: 16px; /* Better for mobile */
+    touch-action: manipulation; /* Better touch handling */
+}
+
+button:hover {
+    background: #2980b9;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Forms */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+input, select, textarea {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 100%;
+    font-size: 16px; /* Better for mobile */
+}
+
+textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Tasks */
+#tasks-container {
+    margin-top: 2rem;
+}
+
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.filters select, .filters input {
+    flex: 1;
+    min-width: 150px;
+    padding: 12px;
+    font-size: 16px;
+}
+
+/* Task Cards */
+.task-card {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.task-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.task-status {
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.task-status select {
+    flex: 1;
+    min-width: 200px;
+    padding: 12px;
+    font-size: 16px;
+}
+
+.task-priority {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.priority-high {
+    background: #ff4444;
+    color: white;
+}
+
+.priority-medium {
+    background: #ffbb33;
+    color: white;
+}
+
+.priority-low {
+    background: #00C851;
+    color: white;
+}
+
+/* Documents Section */
+.task-documents {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.documents-list {
+    display: grid;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.document-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f8f9fa;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+/* Messages Section */
+.task-messages {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.message {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.message-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.message-form input {
+    flex: 1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    nav .container {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .user-info {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filters {
+        flex-direction: column;
+    }
+
+    .filters select, .filters input {
+        width: 100%;
+    }
+
+    .task-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .task-title-group {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .task-status {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .message-form {
+        flex-direction: column;
+    }
+
+    #admin-controls {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    .upload-documents {
+        flex-direction: column;
+    }
+}
+
+/* Status Colors */
+.status-start {
+    color: #3498db;
+}
+
+.status-inprogress {
+    color: #f39c12;
+}
+
+.status-waiting-doc {
+    color: #e74c3c;
+}
+
+.status-waiting-feedback {
+    color: #9b59b6;
+}
+
+.status-complete {
+    color: #2ecc71;
+}
+
+/* Accessibility Improvements */
+button, input, select, textarea {
+    outline: none;
+}
+
+button:focus, input:focus, select:focus, textarea:focus {
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.5);
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) {
+    button {
+        padding: 14px 24px; /* Larger touch targets */
+    }
+
+    .document-item {
+        padding: 12px;
+    }
+
+    select {
+        padding: 14px;
+    }
+}
