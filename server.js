@@ -64,39 +64,59 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Login Endpoint
+// Login Endpoint with improved timeout handling
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   console.log('Login attempt for email:', email);
 
+  let timeoutId;
+  
   try {
     if (!email || !password) {
-      console.log('Missing credentials');
-      return res.status(400).json({ message: 'Email and password are required' });
-    }
-
-    // Create user if not exists (for testing purposes)
-    try {
-      await auth.createUser({
-        email,
-        password,
-        emailVerified: false,
+      return res.status(400).json({ 
+        message: 'Email and password are required',
+        code: 'invalid_credentials'
       });
-      console.log('Created new user:', email);
-    } catch (error) {
-      if (error.code !== 'auth/email-already-exists') {
-        throw error;
-      }
     }
 
-    // Get custom token for client-side auth
-    const customToken = await auth.createCustomToken(email);
-    console.log('Successful login for user:', email);
+    // Create a timeout promise
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => {
+        reject(new Error('Request timeout'));
+      }, 10000); // 10 second timeout
+    });
+
+    // Race between the auth operation and timeout
+    const customToken = await Promise.race([
+      auth.createCustomToken(email),
+      timeoutPromise
+    ]);
+
+    clearTimeout(timeoutId);
     res.json({ token: customToken });
 
   } catch (error) {
+    clearTimeout(timeoutId);
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Internal server error occurred' });
+
+    if (error.message === 'Request timeout') {
+      return res.status(504).json({
+        message: 'Request timed out. Please try again.',
+        code: 'timeout'
+      });
+    }
+
+    if (error.code === 'auth/user-not-found') {
+      return res.status(404).json({
+        message: 'User not found',
+        code: 'user_not_found'
+      });
+    }
+
+    res.status(500).json({
+      message: 'Internal server error occurred',
+      code: 'internal_error'
+    });
   }
 });
 

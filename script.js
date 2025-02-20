@@ -25,24 +25,50 @@ let ws = null;
 // Authentication state
 let currentUser = null;
 
-// Login function
+// Login function with timeout and better error handling
 async function login(email, password) {
     try {
-        // Sign in with Firebase
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        // Create a timeout promise
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Login timeout')), 15000)
+        );
+
+        // Race between the auth operation and timeout
+        const userCredential = await Promise.race([
+            signInWithEmailAndPassword(auth, email, password),
+            timeoutPromise
+        ]);
+
         const user = userCredential.user;
         
-        // Get the ID token
-        const token = await user.getIdToken();
+        // Get the ID token with timeout
+        const token = await Promise.race([
+            user.getIdToken(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Token timeout')), 10000))
+        ]);
+
         localStorage.setItem('token', token);
-        
         currentUser = { email: user.email };
         updateUIAfterLogin();
         connectWebSocket();
         return true;
     } catch (error) {
         console.error('Login error:', error);
-        alert(error.message || 'Login failed. Please check your credentials.');
+        
+        // Handle specific error cases
+        if (error.message === 'Login timeout' || error.message === 'Token timeout') {
+            alert('Login request timed out. Please try again.');
+        } else if (error.code === 'auth/user-not-found') {
+            alert('User not found. Please check your email.');
+        } else if (error.code === 'auth/wrong-password') {
+            alert('Incorrect password. Please try again.');
+        } else if (error.code === 'auth/invalid-email') {
+            alert('Invalid email address.');
+        } else if (error.code === 'auth/too-many-requests') {
+            alert('Too many login attempts. Please try again later.');
+        } else {
+            alert('Login failed. Please try again.');
+        }
         return false;
     }
 }
