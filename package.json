@@ -6,9 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "build": "mkdir -p public && cp -r index.html styles.css chat-styles.css script.js public/",
-    "deploy": "npm run build && netlify deploy --prod",
-    "vercel-build": "npm run build"
+    "build": "echo \"No build step needed\"",
+    "vercel-build": "echo \"No build step needed\""
   },
   "dependencies": {
     "express": "^4.21.2",

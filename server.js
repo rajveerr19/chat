@@ -29,6 +29,7 @@ mongoose.connect(process.env.MONGO_URI)
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static(__dirname));
 
 // User Schema
 const userSchema = new mongoose.Schema({
