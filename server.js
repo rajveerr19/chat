@@ -1,85 +1,118 @@
 const express = require('express');
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const cors = require('cors');
+const { initializeApp, cert } = require('firebase-admin/app');
+const { getAuth } = require('firebase-admin/auth');
+const { getFirestore } = require('firebase-admin/firestore');
 require('dotenv').config();
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(async () => {
-    console.log('Connected to MongoDB');
-    
-    // Initialize default users
-    const defaultUsers = [
-      { username: 'admin', password: await bcrypt.hash('admin123', 10), role: 'admin' },
-      { username: 'user1', password: await bcrypt.hash('user123', 10), role: 'user' }
-    ];
-    
-    // Create users if they don't exist
-    for (const user of defaultUsers) {
-      const existingUser = await User.findOne({ username: user.username });
-      if (!existingUser) {
-        await User.create(user);
-      }
-    }
-  })
-  .catch(err => console.error('MongoDB connection error:', err));
+// Initialize Firebase Admin
+const serviceAccount = {
+  "type": "service_account",
+  "project_id": "taskmanager-caab5",
+  "private_key_id": process.env.FIREBASE_PRIVATE_KEY_ID,
+  "private_key": process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+  "client_email": process.env.FIREBASE_CLIENT_EMAIL,
+  "client_id": process.env.FIREBASE_CLIENT_ID,
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": process.env.FIREBASE_CLIENT_CERT_URL
+};
+
+const admin = initializeApp({
+  credential: cert(serviceAccount)
+});
+
+const auth = getAuth(admin);
+const db = getFirestore(admin);
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// User Schema
-const userSchema = new mongoose.Schema({
-  username: { type: String, unique: true, required: true },
-  password: { type: String, required: true },
-  role: { type: String, enum: ['admin', 'user'], default: 'user' }
-});
-
-const User = mongoose.model('User', userSchema);
-
 // Authentication Middleware
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
-  if (!token) return res.sendStatus(401);
+const authenticateToken = async (req, res, next) => {
+  try {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) return res.sendStatus(401);
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-    req.user = user;
+    const decodedToken = await auth.verifyIdToken(token);
+    req.user = decodedToken;
     next();
-  });
+  } catch (error) {
+    console.error('Auth error:', error);
+    res.sendStatus(403);
+  }
 };
+
+// Health check endpoint
+app.get('/api/health', async (req, res) => {
+  try {
+    res.json({
+      status: 'ok',
+      timestamp: new Date(),
+      service: 'Firebase'
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      error: error.message
+    });
+  }
+});
 
 // Login Endpoint
 app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
+  console.log('Login attempt for email:', email);
 
   try {
-    const user = await User.findOne({ username });
-    if (!user) return res.status(400).json({ message: 'Invalid username or password' });
+    if (!email || !password) {
+      console.log('Missing credentials');
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
 
-    const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) return res.status(400).json({ message: 'Invalid username or password' });
+    // Create user if not exists (for testing purposes)
+    try {
+      await auth.createUser({
+        email,
+        password,
+        emailVerified: false,
+      });
+      console.log('Created new user:', email);
+    } catch (error) {
+      if (error.code !== 'auth/email-already-exists') {
+        throw error;
+      }
+    }
 
-    const token = jwt.sign(
-      { username: user.username, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '1h' }
-    );
+    // Get custom token for client-side auth
+    const customToken = await auth.createCustomToken(email);
+    console.log('Successful login for user:', email);
+    res.json({ token: customToken });
 
-    res.json({ token });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Internal server error occurred' });
   }
 });
 
 // Protected Route Example
 app.get('/api/protected', authenticateToken, (req, res) => {
   res.json({ message: 'This is a protected route', user: req.user });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Global error handler:', err);
+  res.status(500).json({
+    status: 'error',
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
 });
 
 // Start Server
